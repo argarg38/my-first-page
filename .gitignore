@@ -1,0 +1,16 @@
+# Windows / OneDrive
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# macOS
+.DS_Store
+
+# 편집기
+.vscode/
+.idea/
+*.swp
+
+# 임시 파일
+*.tmp
+*~
