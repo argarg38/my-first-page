@@ -19,7 +19,7 @@
 
 **https://argarg38.github.io/my-first-page/**
 
-성장공유회 발표 페이지(바이오 브리핑 앱 소개): **https://argarg38.github.io/my-first-page/present.html** (← → 키로 넘기기)
+성장공유회 발표(바이오 브리핑 앱 소개)는 같은 페이지 맨 아래 "성장공유회 발표" 칸에 들어 있습니다. 슬라이드만 따로 보기: **https://argarg38.github.io/my-first-page/present.html** (← → 키로 넘기기)
 
 위 주소로 바로 볼 수 있습니다. 내려받은 뒤 `index.html` 파일을 브라우저로 열어도 되고,
 별도 설치나 빌드 과정은 없습니다.
