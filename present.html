@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>바이오 브리핑 발표</title>
+<meta name="description" content="약토피아 바이브코딩 성장공유회: 개인용 제약·바이오 뉴스 큐레이션 앱 '바이오 브리핑' 소개">
+
+<style>
+  /* ══ 색 토큰 (index.html과 같은 iOS 팔레트) ═══════════════ */
+  :root {
+    --bg: #F2F2F7; --card: #FFFFFF; --card-sunken: #F2F2F7;
+    --ink: #000000; --ink-2: #3C3C43; --ink-3: #8A8A8E;
+    --line: rgba(60, 60, 67, .20);
+    --green: #34C759; --green-ink: #248A3D; --green-tint: rgba(52, 199, 89, .14);
+    --blue: #007AFF; --blue-tint: rgba(0, 122, 255, .12);
+    --orange: #FF9500; --orange-ink: #C56A00; --orange-tint: rgba(255, 149, 0, .14);
+    --red-ink: #D70015; --red-tint: rgba(255, 59, 48, .12);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px -14px rgba(0, 0, 0, .22);
+    --font: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", -apple-system,
+            BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --r-card: 16px;
+    --ease: cubic-bezier(.32, .72, 0, 1);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #000000; --card: #1C1C1E; --card-sunken: #2C2C2E;
+      --ink: #FFFFFF; --ink-2: #EBEBF5; --ink-3: #98989F;
+      --line: rgba(84, 84, 88, .55);
+      --green: #30D158; --green-ink: #30D158; --green-tint: rgba(48, 209, 88, .18);
+      --blue: #0A84FF; --blue-tint: rgba(10, 132, 255, .18);
+      --orange: #FF9F0A; --orange-ink: #FF9F0A; --orange-tint: rgba(255, 159, 10, .18);
+      --red-ink: #FF6961; --red-tint: rgba(255, 69, 58, .18);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 24px -14px rgba(0, 0, 0, .9);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000; --card: #1C1C1E; --card-sunken: #2C2C2E;
+    --ink: #FFFFFF; --ink-2: #EBEBF5; --ink-3: #98989F;
+    --line: rgba(84, 84, 88, .55);
+    --green: #30D158; --green-ink: #30D158; --green-tint: rgba(48, 209, 88, .18);
+    --blue: #0A84FF; --blue-tint: rgba(10, 132, 255, .18);
+    --orange: #FF9F0A; --orange-ink: #FF9F0A; --orange-tint: rgba(255, 159, 10, .18);
+    --red-ink: #FF6961; --red-tint: rgba(255, 69, 58, .18);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 24px -14px rgba(0, 0, 0, .9);
+    color-scheme: dark;
+  }
+
+  /* ══ 기본 ════════════════════════════════════════════════ */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--font); font-size: 18px; line-height: 1.6;
+    letter-spacing: -.01em; -webkit-font-smoothing: antialiased; word-break: keep-all;
+    overflow: hidden;
+  }
+  h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -.022em; text-wrap: balance; }
+  p { margin: 0; }
+  ul, ol { margin: 0; padding: 0; list-style: none; }
+  a { color: var(--blue); text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 8px; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* ══ 슬라이드 ═════════════════════════════════════════════ */
+  .deck { position: fixed; inset: 0 0 64px 0; }
+  .slide {
+    position: absolute; inset: 0;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center; gap: clamp(24px, 5vw, 72px);
+    padding: clamp(24px, 5vh, 56px) clamp(16px, 6vw, 96px);
+    opacity: 0; visibility: hidden; transform: translateX(24px);
+    transition: opacity .35s var(--ease), transform .45s var(--ease), visibility 0s .45s;
+    overflow-y: auto;
+  }
+  .slide.is-before { transform: translateX(-24px); }
+  .slide.is-current {
+    opacity: 1; visibility: visible; transform: none;
+    transition: opacity .35s var(--ease), transform .45s var(--ease);
+  }
+  .slide.no-phone { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 700; color: var(--blue);
+    background: var(--blue-tint); padding: 4px 12px; border-radius: 999px; margin-bottom: 18px;
+  }
+  .slide h1 { font-size: clamp(36px, 5.6vw, 68px); line-height: 1.15; }
+  .slide h2 { font-size: clamp(28px, 3.8vw, 46px); line-height: 1.2; margin-bottom: 14px; }
+  .lead { font-size: clamp(18px, 1.7vw, 23px); color: var(--ink-2); margin-top: 14px; max-width: 40em; }
+  .muted { color: var(--ink-3); }
+
+  /* 카드 목록 */
+  .cards { display: grid; gap: 12px; margin-top: 26px; }
+  .cards.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cards.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .card {
+    background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow);
+    padding: 16px 20px;
+  }
+  .card h3 { font-size: 19px; display: flex; gap: 8px; align-items: baseline; }
+  .card p { font-size: 16px; color: var(--ink-2); margin-top: 4px; }
+  .card .em { font-size: 22px; }
+
+  /* 흐름(타임라인) */
+  .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 30px; }
+  .step { background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 16px; position: relative; }
+  .step .time { font-size: 14px; font-weight: 700; color: var(--blue); }
+  .step h3 { font-size: 18px; margin-top: 2px; }
+  .step p { font-size: 14.5px; color: var(--ink-2); margin-top: 6px; line-height: 1.5; }
+  .step .tool { display: inline-block; margin-top: 10px; font-size: 12.5px; font-weight: 700; color: var(--ink-3); background: var(--card-sunken); border-radius: 6px; padding: 2px 8px; }
+
+  /* 칩 */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chip { font-size: 15px; padding: 5px 12px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow); }
+  .chip.off { color: var(--ink-3); text-decoration: line-through; box-shadow: none; background: var(--card-sunken); }
+  .chip.scrape { background: var(--orange-tint); color: var(--orange-ink); box-shadow: none; font-weight: 600; }
+
+  /* 숫자 */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 28px; }
+  .stat { background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 18px 20px; }
+  .stat b { display: block; font-size: clamp(30px, 3.4vw, 44px); line-height: 1.1; letter-spacing: -.03em; }
+  .stat span { font-size: 15px; color: var(--ink-2); }
+
+  /* 단계 화살표 */
+  .pipe { display: flex; align-items: stretch; gap: 10px; margin-top: 26px; flex-wrap: wrap; }
+  .pipe .card { flex: 1 1 200px; }
+  .arrow { align-self: center; color: var(--ink-3); font-size: 22px; }
+  .tag { display: inline-block; font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-right: 6px; }
+  .tag.o { background: var(--orange-tint); color: var(--orange-ink); }
+  .tag.b { background: var(--blue-tint); color: var(--blue); }
+
+  /* 배운 점 표 */
+  .lessons { margin-top: 24px; background: var(--card); border-radius: var(--r-card); box-shadow: var(--shadow); overflow: hidden; }
+  .lessons li { display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); gap: 12px; padding: 14px 20px; border-top: 1px solid var(--line); font-size: 16.5px; }
+  .lessons li:first-child { border-top: 0; }
+  .lessons .to { color: var(--ink-3); text-align: center; }
+
+  /* ══ 아이폰 틀 ═══════════════════════════════════════════ */
+  .phone {
+    --h: min(76vh, 700px);
+    margin: 0;
+    height: var(--h); aspect-ratio: 390 / 844;
+    border-radius: calc(var(--h) * .075);
+    padding: calc(var(--h) * .016);
+    background: #1a1a1c;
+    box-shadow: 0 0 0 1.5px #3a3a3e, 0 30px 60px -30px rgba(0, 0, 0, .55);
+    position: relative; flex-shrink: 0;
+  }
+  .phone img {
+    display: block; width: 100%; height: 100%; object-fit: cover; object-position: top;
+    border-radius: calc(var(--h) * .06); background: var(--card);
+  }
+  .phone figcaption {
+    position: absolute; left: 50%; bottom: calc(var(--h) * -.06); transform: translateX(-50%);
+    white-space: nowrap; font-size: 14px; color: var(--ink-3);
+  }
+
+  /* ══ 아래 막대 ═══════════════════════════════════════════ */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; height: 64px;
+    display: flex; align-items: center; gap: 12px; padding: 0 clamp(16px, 4vw, 40px);
+    border-top: 1px solid var(--line); background: var(--bg);
+  }
+  .progress { flex: 1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .progress i { display: block; width: 0; height: 100%; background: var(--blue); transition: width .45s var(--ease); }
+  .count { font-size: 15px; color: var(--ink-3); min-width: 56px; text-align: center; }
+  .nav-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: 0;
+    background: var(--card); color: var(--ink); box-shadow: var(--shadow);
+    font: inherit; font-size: 18px; cursor: pointer;
+  }
+  .nav-btn:disabled { opacity: .35; cursor: default; }
+  .hint { font-size: 13px; color: var(--ink-3); }
+
+  /* ══ 좁은 화면 (휴대폰으로 볼 때) ═════════════════════════ */
+  @media (max-width: 860px) {
+    body { font-size: 16px; }
+    .slide { grid-template-columns: minmax(0, 1fr); align-content: start; gap: 28px; padding-bottom: 72px; }
+    .phone { --h: 520px; justify-self: center; }
+    .cards.two, .cards.three, .flow { grid-template-columns: minmax(0, 1fr); }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lessons li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .lessons .to { text-align: left; }
+    .hint { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slide, .slide.is-current { transition: none; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 발표자 메모는 각 section의 data-note에 있다. 청중 화면에는 보이지 않고,
+     Claude 앱의 "발표 도우미" mod가 이 파일에서 읽어 간다. -->
+<main class="deck" id="deck">
+
+  <!-- 1 -->
+  <section class="slide" data-title="표지"
+    data-note="안녕하세요, 정종인입니다. 4주 동안 바이브코딩으로 만든 '바이오 브리핑'을 소개합니다. 평일 아침마다 제약·바이오 뉴스를 AI가 한국어로 요약해 아이폰으로 보내 주는 개인용 앱입니다. 오른쪽이 실제 앱 화면입니다. (30초)">
+    <div>
+      <span class="eyebrow">약토피아 바이브코딩 · 성장공유회</span>
+      <h1>아침마다 도착하는<br>나만의 제약·바이오 브리핑</h1>
+      <p class="lead">국내외 제약·바이오·약업계 뉴스를 새벽에 모으고, AI가 한국어로 요약해서 <b>평일 아침 9시 전</b> 아이폰으로 보여 주는 개인용 앱</p>
+      <p class="lead muted" style="font-size:16px">정종인 · 차의과학대학교 약학 · 2026.09.19 기획 → 10.10 자동 운영</p>
+    </div>
+    <figure class="phone"><img src="present/home.png" alt="바이오 브리핑 오늘의 핵심 화면"><figcaption>실제 앱 · 오늘의 핵심</figcaption></figure>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide no-phone" data-title="왜 만들었나"
+    data-note="저는 바이오 VC로 진로를 준비하고 있고, 약학 전공자로서 약업계 정책도 따라가야 합니다. 그런데 매체가 많고 해외 기사는 영어라서 매일 확인하기 어려웠습니다. 그래서 조건 세 가지를 정했습니다. 예산 0원, 혼자, 그리고 코딩 입문자라는 점입니다. (40초)">
+    <div>
+      <span class="eyebrow">문제</span>
+      <h2>매일 10곳 넘는 매체를 다 볼 수 없었다</h2>
+      <p class="lead">바이오 VC 진로를 준비하면서 투자·산업 동향을 보고, 약학 전공자로서 약업계·정책도 따라가야 했습니다.</p>
+      <div class="cards three">
+        <div class="card"><h3><span class="em">💸</span>예산 0원</h3><p>Vercel · Supabase · Gemini · GitHub Actions 모두 무료 플랜</p></div>
+        <div class="card"><h3><span class="em">🙋</span>사용자 1명</h3><p>나만 쓰는 앱. 비밀번호로 잠그고, 저장소도 비공개</p></div>
+        <div class="card"><h3><span class="em">🌱</span>코딩 입문자</h3><p>계획을 먼저 세우고, 단계마다 동작을 확인하며 Claude Code와 함께 만듦</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide no-phone" data-title="하루 흐름"
+    data-note="앱의 하루입니다. 새벽 5시 17분에 GitHub Actions가 수집을 시작하고, AI가 두 번에 걸쳐 요약한 뒤 Supabase에 저장합니다. 8시대에 Vercel이 알림을 보내고, 저는 아이폰으로 읽습니다. 주말에는 AI 없이 수집만 해 두었다가 월요일에 한꺼번에 요약합니다. 처음에 저는 수집과 알림을 같은 기능으로 헷갈렸는데, 둘은 서로 다른 서비스입니다. (50초)">
+    <div>
+      <span class="eyebrow">전체 구조</span>
+      <h2>내가 자는 동안 일하는 앱</h2>
+      <div class="flow">
+        <div class="step"><span class="time tnum">05:17</span><h3>수집</h3><p>12개 소스에서 새 기사 모으기, 중복 제거</p><span class="tool">GitHub Actions</span></div>
+        <div class="step"><span class="time">1차 AI</span><h3>선별</h3><p>전체 기사 분류 · 점수 · 한 줄 요약</p><span class="tool">Gemini Flash-Lite</span></div>
+        <div class="step"><span class="time">2차 AI</span><h3>심층 분석</h3><p>핵심 5~10건만 3줄 요약 + 시사점</p><span class="tool">Gemini Flash</span></div>
+        <div class="step"><span class="time">저장</span><h3>최근 3회분</h3><p>저장한 기사만 영구 보관</p><span class="tool">Supabase (서울)</span></div>
+        <div class="step"><span class="time tnum">08시대</span><h3>아침 알림</h3><p>“오늘의 핵심 N건” 푸시</p><span class="tool">Vercel Cron · PWA</span></div>
+      </div>
+      <p class="lead" style="font-size:17px">🗓️ 주말(토·일 09:17)에는 AI 없이 <b>수집만</b> 해 둡니다. RSS는 최근 32~63시간 분량만 보여 주기 때문에, 월요일에 몰아서 모으면 금요일 기사를 놓칩니다.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide" data-title="수집: 12개 소스"
+    data-note="소스는 국내와 해외를 반반으로 맞췄습니다. RSS가 없는 데일리팜과 바이오스펙테이터는 HTML 스크래핑으로 가져옵니다. robots.txt를 지키고, 데일리팜은 5초 간격으로 요청합니다. 유료 기사는 원문을 볼 수 없어서 뺐습니다. 소스는 오른쪽 설정 화면에서 스위치로 켜고 끕니다. (40초)">
+    <div>
+      <span class="eyebrow">기능 1 · 수집</span>
+      <h2>국내·해외 12개 소스를 매일 새벽에</h2>
+      <p class="lead">RSS를 먼저 쓰고, RSS가 없는 국내 매체는 HTML 스크래핑(robots.txt 준수, 요청 간격 5초)으로 가져옵니다.</p>
+      <div class="chips">
+        <span class="chip">히트뉴스</span><span class="chip">약사공론</span><span class="chip">청년의사</span><span class="chip">더바이오</span>
+        <span class="chip scrape">데일리팜 · 스크래핑</span><span class="chip scrape">바이오스펙테이터 · 스크래핑</span><span class="chip">식약처 보도자료</span>
+        <span class="chip">BioPharma Dive</span><span class="chip">STAT</span><span class="chip">FDA 보도자료</span>
+        <span class="chip off">Endpoints (유료)</span><span class="chip off">Fierce Biotech (차단)</span>
+      </div>
+      <div class="cards two">
+        <div class="card"><h3>🔒 유료 기사 제외</h3><p>내가 원문을 열어 볼 수 없는 기사는 요약하지 않음 (STAT+는 제목 패턴으로 거름)</p></div>
+        <div class="card"><h3>🏷️ 매체 성격 표시</h3><p>예: 약사공론은 “약사단체(대한약사회) 발행”. 기사의 이해관계를 함께 봄</p></div>
+      </div>
+    </div>
+    <figure class="phone"><img src="present/settings.png" alt="설정 화면의 소스 켜기·끄기 목록" loading="lazy"><figcaption>설정 · 소스 켜기/끄기</figcaption></figure>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide" data-title="AI 2단계 요약"
+    data-note="AI 요약은 두 단계입니다. 1차는 가볍고 한도가 넉넉한 Flash-Lite로 모든 기사를 분류하고 점수를 매깁니다. 2차는 한도가 하루 20회뿐인 Flash로 핵심 기사만 깊게 분석합니다. 무료 Gemini는 과부하 오류가 잦아서, 실패하면 다른 모델로, 그래도 안 되면 Claude Haiku로 넘어가게 만들었습니다. 카드에서 3줄 요약과 'AI 해석'을 나눠 둔 것도 보여 주세요. (50초)">
+    <div>
+      <span class="eyebrow">기능 2 · AI 요약</span>
+      <h2>싼 모델로 거르고, 좋은 모델로 깊게</h2>
+      <div class="pipe">
+        <div class="card"><h3>1차 선별</h3><p><span class="tag b">Flash-Lite</span>전체 기사 · 하루 500회</p><p>카테고리 💰투자 🔬연구 💊정책, 중요도 1~10점, 한 줄 요약</p></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="card"><h3>2차 심층</h3><p><span class="tag b">Flash</span>핵심 5~10건 · 하루 20회</p><p>3줄 요약, 기업·기관, 태그, 카테고리별 시사점</p></div>
+      </div>
+      <div class="card" style="margin-top:12px"><h3>🛟 과부하 대비</h3><p>3.8 Flash가 503 오류 → 3.5 Flash → 그래도 안 되면 Claude Haiku 4.5(비상용, 유료). 재시도는 2회까지만 (실패도 하루 한도에 포함됨)</p></div>
+      <p class="lead" style="font-size:16.5px">요약(원문에 있는 사실)과 <b>AI 해석</b>(시사점)을 화면에서 나눠, 어디까지가 기사이고 어디부터가 AI의 생각인지 구분합니다.</p>
+    </div>
+    <figure class="phone"><img src="present/home.png" alt="3줄 요약과 AI 해석이 나뉜 핵심 기사 카드" loading="lazy"><figcaption>핵심 카드 · 3줄 요약 + AI 해석</figcaption></figure>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide" data-title="정확성 장치"
+    data-note="제가 가장 신경 쓴 부분은 정확성입니다. AI가 숫자를 바꾸거나 과장하지 않도록 규칙을 만들고, 그 규칙을 코드가 한 번 더 검사합니다. 예를 들어 요약에 나온 숫자와 단위가 원문에 없으면 오른쪽처럼 '수치 확인 필요' 표시가 붙습니다. 이 규칙들은 모두 테스트에서 실제로 실패한 사례에서 나왔습니다. (50초)">
+    <div>
+      <span class="eyebrow">기능 3 · 정확성</span>
+      <h2>AI를 믿지 말고, 코드로 한 번 더 확인</h2>
+      <div class="cards">
+        <div class="card"><h3>🔢 숫자 + 단위 원문 대조</h3><p>요약 속 금액·수치·날짜가 원문에 없으면 <span class="tag o">⚠️ 수치 확인 필요</span> 표시. 외화는 원문 표기를 그대로 씀 ($80 million을 8천만 달러로 바꾸지 않음)</p></div>
+        <div class="card"><h3>🚫 과장 표현 금지</h3><p>“입증하였다”, “독점 구도”, “될 것이다” 같은 표현을 금지어로 검사하고, 시사점은 가능성 표현으로 끝냄. 매수·매도 추천 금지</p></div>
+        <div class="card"><h3>🔗 링크는 AI를 거치지 않음</h3><p>AI가 주소를 지어내지 못하도록, 원문 링크는 코드가 기사 번호로 붙임</p></div>
+      </div>
+      <p class="lead" style="font-size:16px">프롬프트 규칙 20여 개는 모두 <b>테스트에서 실제로 실패한 사례</b>에서 나왔습니다.</p>
+    </div>
+    <figure class="phone"><img src="present/dark.png" alt="수치 확인 필요 표시가 붙은 기사 카드, 다크 모드" loading="lazy"><figcaption>다크 모드 · 수치 확인 표시</figcaption></figure>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide" data-title="오늘의 핵심 선정"
+    data-note="하루에 기사가 200건 넘게 들어와도 제가 읽을 수 있는 건 10건 정도입니다. 그래서 점수 기준을 VC 업계 방식으로 정했습니다. 기술이전은 총액이 아니라 계약금으로 보고, 반환이나 임상 실패 같은 나쁜 소식도 좋은 소식과 같은 무게로 봅니다. 그리고 투자, 연구, 정책이 최소 1건씩은 들어가게 했습니다. 나머지 기사는 '분야' 탭에서 봅니다. (50초)">
+    <div>
+      <span class="eyebrow">기능 4 · 오늘의 핵심</span>
+      <h2>하루 5~10건만, VC의 눈으로 고르기</h2>
+      <div class="cards">
+        <div class="card"><h3>💰 기술이전은 총액이 아니라 계약금</h3><p>계약금 1억 달러 이상 9~10점, 1,000만 달러 이상 7~8점, 미공개는 최대 6점</p></div>
+        <div class="card"><h3>⚖️ 나쁜 소식도 같은 무게</h3><p>권리 반환, 임상 보류·실패, 허가 거절도 좋은 소식과 같은 기준으로 점수를 매김. 2상 결과는 핵심 변곡점</p></div>
+        <div class="card"><h3>📌 분야별 최소 1건 보장</h3><p>7점 이상에서 5~10건을 고르고, 빠진 분야(💰🔬💊)가 있으면 그 분야 최고점 기사를 추가</p></div>
+      </div>
+    </div>
+    <figure class="phone"><img src="present/field.png" alt="투자·연구·정책 분야별 기사 화면" loading="lazy"><figcaption>분야 탭 · 투자 76 · 연구 12 · 정책 92</figcaption></figure>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide" data-title="같은 사건 묶기 + 근거 논문"
+    data-note="같은 소식을 여러 매체가 보도하면 카드가 겹칩니다. 그래서 AI가 같은 사건끼리 묶게 했는데, 처음에는 다른 회사 기사가 섞였습니다. 그래서 AI가 묶음마다 회사 이름을 내게 하고, 그 이름이 실제로 제목이나 요약에 있는 기사만 묶도록 코드가 확인합니다. 임상 결과 기사는 PubMed에서 논문을 찾고, 같은 연구일 때만 연결합니다. 10월 9일에는 후보 두 건이 모두 다른 시험의 논문이어서 정확히 걸러졌습니다. (60초)">
+    <div>
+      <span class="eyebrow">기능 5 · 묶기와 논문</span>
+      <h2>같은 소식은 한 장으로, 논문은 확인된 것만</h2>
+      <div class="cards">
+        <div class="card"><h3>🗞️ 같은 사건 묶기</h3><p>여러 매체의 같은 사건을 카드 한 장으로 접고, “같은 소식 N건”에 다른 매체 링크를 보여 줌. <b>10/9 실제: 24묶음, 43건 접힘</b></p></div>
+        <div class="card"><h3>🧪 AI가 헷갈려서 코드가 검증</h3><p>처음에 다른 회사 기사가 섞임 → AI가 묶음마다 회사 이름을 내고, 그 이름이 제목·요약에 <b>실제로 있는 기사만</b> 묶음</p></div>
+        <div class="card"><h3>📄 근거 논문 (PubMed)</h3><p>임상 결과·논문 발표 기사만 검색. 초록과 기사를 비교해 <b>같은 연구일 때만</b> 연결. 10/9 후보 2건(다른 시험의 논문)은 정확히 걸러냄</p></div>
+      </div>
+    </div>
+    <figure class="phone"><img src="present/group.png" alt="같은 소식 4건이 묶인 기사를 펼친 화면" loading="lazy"><figcaption>펼친 카드 · 같은 소식, 다른 기사</figcaption></figure>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide" data-title="앱 화면"
+    data-note="앱은 앱스토어 없이 Safari에서 홈 화면에 추가하는 PWA입니다. 별표를 누르면 저장함으로 가고, 저장한 기사만 영구 보관됩니다. 피드는 최근 3회분만 남겨서 무료 DB 용량을 지킵니다. 디자인은 처음에 Apple 스타일을 적용했다가 토스 스타일로 바꿨고, 다크 모드도 지원합니다. (40초)">
+    <div>
+      <span class="eyebrow">기능 6 · 화면</span>
+      <h2>앱스토어 없이 아이폰 홈 화면에</h2>
+      <div class="cards two">
+        <div class="card"><h3>📱 PWA</h3><p>Safari → 공유 → 홈 화면에 추가. 비밀번호를 한 번 입력하면 90일 유지</p></div>
+        <div class="card"><h3>⭐ 저장함</h3><p>피드는 최근 3회분만 보관, 별표 누른 기사만 영구 보관 (분야·태그로 걸러 보기)</p></div>
+        <div class="card"><h3>🙈 관련 없는 기사 숨김</h3><p>AI가 제약·바이오와 관련 없다고 본 기사는 숨기고 설정에서 따로 확인 (10/9: 28건)</p></div>
+        <div class="card"><h3>🎨 토스 스타일 + 다크 모드</h3><p>Apple 스타일 → 토스 스타일로 교체. 카테고리 이모지는 출처 옆에</p></div>
+      </div>
+    </div>
+    <figure class="phone"><img src="present/saved.png" alt="저장함 화면" loading="lazy"><figcaption>저장함 · 분야·태그 필터</figcaption></figure>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide no-phone" data-title="숫자로 보기"
+    data-note="숫자로 정리하면 이렇습니다. 9월 19일에 계획을 세우기 시작해 10월 10일에 자동 운영을 켰습니다. 10월 9일 하루에 251건이 들어왔고, 화면에는 180건, 핵심은 10건이었습니다. 비용은 0원이고, 비상용 Claude만 쓸 때마다 조금 듭니다. (30초)">
+    <div>
+      <span class="eyebrow">결과</span>
+      <h2>숫자로 보는 바이오 브리핑</h2>
+      <div class="stats">
+        <div class="stat"><b class="tnum">22일</b><span>9/19 첫 계획 → 10/10 자동 운영</span></div>
+        <div class="stat"><b class="tnum">12곳</b><span>소스 (켜짐 10 · 스크래핑 2)</span></div>
+        <div class="stat"><b class="tnum">251 → 10</b><span>10/9 하루 수집 → 오늘의 핵심</span></div>
+        <div class="stat"><b class="tnum">0원</b><span>월 고정비 (비상용 Claude만 쓴 만큼)</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b class="tnum">180</b><span>화면에 보인 기사 (숨김 28)</span></div>
+        <div class="stat"><b class="tnum">43</b><span>같은 사건으로 접힌 기사</span></div>
+        <div class="stat"><b class="tnum">5</b><span>AI 프롬프트 (선별·심층·묶기·논문 2)</span></div>
+        <div class="stat"><b class="tnum">20+</b><span>실패에서 나온 프롬프트 규칙</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide no-phone" data-title="배운 점과 다음 계획"
+    data-note="가장 크게 배운 점은 실패를 규칙으로 바꾸는 방법입니다. 앱이 며칠 동안 '수집 실패'로 보였던 적이 있는데, 원인은 수집 스케줄이 꺼져 있었던 것이었습니다. AI가 번호를 헷갈리면 코드가 확인할 근거를 함께 받습니다. 그리고 코드를 쓰기 전에 계획을 먼저 세우는 방식이 입문자에게 가장 잘 맞았습니다. 다음에는 아이폰 알림, 저장 메모, 원화 환산을 붙일 계획입니다. (60초)">
+    <div>
+      <span class="eyebrow">성장</span>
+      <h2>실패가 규칙이 되었다</h2>
+      <ul class="lessons">
+        <li><span>😵 10/5~10/9 앱이 “수집 실패”로 보임</span><span class="to" aria-hidden="true">→</span><span><b>알림(Vercel)과 수집(GitHub Actions)은 서로 다른 서비스</b>. 수집 스케줄을 켜고 상태 확인 명령을 만듦</span></li>
+        <li><span>🔀 AI가 묶음 번호를 헷갈려 다른 회사 기사를 섞음</span><span class="to" aria-hidden="true">→</span><span>AI 답에 <b>코드가 검증할 근거</b>(회사 이름, 같은 연구 여부)를 함께 받음</span></li>
+        <li><span>📈 AI가 “입증”, “독점”처럼 과장하고 숫자를 나눠 씀</span><span class="to" aria-hidden="true">→</span><span>금지 표현 목록 + 숫자·단위 원문 대조 검사</span></li>
+        <li><span>🧭 무엇부터 만들지 막막함</span><span class="to" aria-hidden="true">→</span><span><b>코드보다 계획 먼저</b>. 선택지와 추천안을 보고 한 번에 하나씩 결정</span></li>
+      </ul>
+      <div class="chips" style="margin-top:20px">
+        <span class="chip">다음 ▸ 아이폰 아침 알림 켜기</span><span class="chip">저장 기사 한 줄 메모</span><span class="chip">외화 → 원화 환산</span><span class="chip">저장 기사 “심층 분석” 버튼</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide no-phone" data-title="마무리"
+    data-note="코드를 거의 몰랐던 제가 4주 만에 매일 아침 저를 위해 일하는 앱을 갖게 되었습니다. 들어 주셔서 감사합니다. 질문 받겠습니다. (예상 질문: 비용, 정확성 확인 방법, Claude Code와 작업한 방식)">
+    <div style="text-align:center">
+      <span class="eyebrow">감사합니다</span>
+      <h1>코드를 몰라도,<br>매일 아침 나를 위해 일하는 앱</h1>
+      <p class="lead" style="margin-inline:auto">질문 받겠습니다 🙋</p>
+      <p class="lead muted" style="margin-inline:auto;font-size:16px">4주 활동 기록 → <a href="./">바이브코딩 4주 처방전</a></p>
+    </div>
+  </section>
+
+</main>
+
+<nav class="bar" aria-label="슬라이드 이동">
+  <button class="nav-btn" id="prev" aria-label="이전 슬라이드">‹</button>
+  <span class="count tnum" id="count" aria-live="polite">1 / 12</span>
+  <button class="nav-btn" id="next" aria-label="다음 슬라이드">›</button>
+  <div class="progress" aria-hidden="true"><i id="fill"></i></div>
+  <span class="hint">← → 넘기기 · F 전체 화면</span>
+</nav>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+const $count = document.getElementById("count");
+const $fill = document.getElementById("fill");
+const $prev = document.getElementById("prev");
+const $next = document.getElementById("next");
+let cur = 0;
+
+function show(n) {
+  cur = Math.max(0, Math.min(slides.length - 1, n));
+  slides.forEach((s, i) => {
+    s.classList.toggle("is-current", i === cur);
+    s.classList.toggle("is-before", i < cur);
+    s.inert = i !== cur;
+  });
+  $count.textContent = `${cur + 1} / ${slides.length}`;
+  $fill.style.width = `${((cur + 1) / slides.length) * 100}%`;
+  $prev.disabled = cur === 0;
+  $next.disabled = cur === slides.length - 1;
+  history.replaceState(null, "", `#${cur + 1}`);
+}
+
+$prev.onclick = () => show(cur - 1);
+$next.onclick = () => show(cur + 1);
+document.addEventListener("keydown", (e) => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  else if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  else if (e.key === "Home") show(0);
+  else if (e.key === "End") show(slides.length - 1);
+  else if (e.key === "f" || e.key === "F") {
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+  }
+});
+// 휴대폰에서 좌우로 밀어서 넘기기
+let x0 = null;
+addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+addEventListener("touchend", (e) => {
+  if (x0 === null) return;
+  const dx = e.changedTouches[0].clientX - x0;
+  if (Math.abs(dx) > 60) show(cur + (dx < 0 ? 1 : -1));
+  x0 = null;
+});
+
+// 주소 끝의 #번호로 바로 이동 (예: present.html#5)
+const fromHash = () => show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
